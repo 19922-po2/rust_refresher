@@ -4,11 +4,14 @@ use screenshots::Screen;
 use std::{
     sync::{
         Arc,
-        atomic::{AtomicBool, Ordering},
+        atomic::{AtomicBool, AtomicUsize, Ordering},
     },
     thread,
     time::Duration,
 };
+
+static BM_COUNT: AtomicUsize = AtomicUsize::new(0);
+static MYSTIC_COUNT: AtomicUsize = AtomicUsize::new(0);
 
 fn get_primary_screen() -> Screen {
     let screens = Screen::all().unwrap();
@@ -98,30 +101,74 @@ fn buy(enigo: &mut Enigo, item: Option<(i32, i32)>) {
 }
 
 fn check_bm_1_to_4() -> Option<(i32, i32)> {
-    if is_pixel_color(894, 199, (177, 91, 33)) || is_pixel_color(894, 199, (250, 65, 22)) {
+    if is_pixel_color(894, 199, (177, 91, 33)) {
+        println!("BM found at (894, 199)");
+        BM_COUNT.fetch_add(1, Ordering::SeqCst);
         return Some((1696, 249));
     }
-    if is_pixel_color(895, 403, (174, 86, 30)) || is_pixel_color(895, 403, (250, 65, 22)) {
+    if is_pixel_color(894, 199, (250, 65, 22)) {
+        println!("Mystic found at (894, 199)");
+        MYSTIC_COUNT.fetch_add(1, Ordering::SeqCst);
+        return Some((1696, 249));
+    }
+    if is_pixel_color(895, 403, (174, 86, 30)) {
+        println!("BM found at (895, 403)");
+        BM_COUNT.fetch_add(1, Ordering::SeqCst);
         return Some((1696, 460));
     }
-    if is_pixel_color(895, 609, (178, 93, 34)) || is_pixel_color(895, 609, (250, 65, 22)) {
+    if is_pixel_color(895, 403, (250, 65, 22)) {
+        println!("Mystic found at (895, 403)");
+        MYSTIC_COUNT.fetch_add(1, Ordering::SeqCst);
+        return Some((1696, 460));
+    }
+    if is_pixel_color(895, 609, (178, 93, 34)) {
+        println!("BM found at (895, 609)");
+        BM_COUNT.fetch_add(1, Ordering::SeqCst);
         return Some((1696, 666));
     }
-    if is_pixel_color(895, 816, (179, 95, 36)) || is_pixel_color(895, 816, (250, 61, 21)) {
+    if is_pixel_color(895, 609, (250, 65, 22)) {
+        println!("Mystic found at (895, 609)");
+        MYSTIC_COUNT.fetch_add(1, Ordering::SeqCst);
+        return Some((1696, 666));
+    }
+    if is_pixel_color(895, 816, (179, 95, 36)) {
+        println!("BM found at (895, 816)");
+        BM_COUNT.fetch_add(1, Ordering::SeqCst);
         return Some((1696, 870));
     }
-    println!("No BMs or Mystics found in rows 1 to 4");
+    if is_pixel_color(895, 816, (250, 61, 21)) {
+        println!("Mystic found at (895, 816)");
+        MYSTIC_COUNT.fetch_add(1, Ordering::SeqCst);
+        return Some((1696, 870));
+    }
+
+    //println!("No BMs or Mystics found in rows 1 to 4");
     None
 }
 
 fn check_bm_5_to_6() -> Option<(i32, i32)> {
-    if is_pixel_color(893, 714, (180, 100, 40)) || is_pixel_color(893, 714, (250, 65, 22)) {
+    if is_pixel_color(893, 714, (180, 100, 40)) {
+        println!("BM found at (893, 714)");
+        BM_COUNT.fetch_add(1, Ordering::SeqCst);
         return Some((1696, 770));
     }
-    if is_pixel_color(893, 920, (181, 103, 42)) || is_pixel_color(893, 920, (252, 62, 21)) {
+    if is_pixel_color(893, 714, (250, 65, 22)) {
+        println!("Mystic found at (893, 714)");
+        MYSTIC_COUNT.fetch_add(1, Ordering::SeqCst);
+        return Some((1696, 770));
+    }
+    if is_pixel_color(893, 920, (181, 103, 42)) {
+        println!("BM found at (893, 920)");
+        BM_COUNT.fetch_add(1, Ordering::SeqCst);
         return Some((1696, 970));
     }
-    println!("No BMs or Mystics found in rows 5 to 6");
+    if is_pixel_color(893, 920, (252, 62, 21)) {
+        println!("Mystic found at (893, 920)");
+        MYSTIC_COUNT.fetch_add(1, Ordering::SeqCst);
+        return Some((1696, 970));
+    }
+
+    //println!("No BMs or Mystics found in rows 5 to 6");
     None
 }
 
@@ -161,6 +208,11 @@ fn refresh_loop() {
         } else {
             refresh(&mut enigo);
         }
+        println!(
+            "Current totals → BMs: {}, Mystics: {}",
+            BM_COUNT.load(Ordering::SeqCst),
+            MYSTIC_COUNT.load(Ordering::SeqCst)
+        );
     }
 
     println!("Refresh loop stopped by user.");
